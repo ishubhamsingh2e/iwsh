@@ -58,12 +58,12 @@ with mp_hands.Hands(
     while cap.isOpened():
         ret, frame = cap.read()
         image = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-        
+
         image = cv2.flip(image, 1)
         image.flags.writeable = False
-        
+
         results = hands.process(image)
-        
+
         image.flags.writeable = True
         image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
 
@@ -90,7 +90,7 @@ with mp_hands.Hands(
             # print(landmarks["landmark"])
 
             for i in landmarks["landmark"]:
-                
+
                 if index == 21:
                     index = 0
 

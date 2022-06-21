@@ -1,5 +1,12 @@
+import time
 import cv2
 import mediapipe as mp
+
+from collections import Counter
+
+from iwsh import base
+from google.protobuf.json_format import MessageToDict
+
 
 class iwsh:
     def __init__(self, VIDEO_FEED, HAND_OBJECT) -> None:
@@ -7,24 +14,56 @@ class iwsh:
         self.HAND_OBJECT = HAND_OBJECT
 
     def number(self, window_size: int = 2, digit_width: int = 1) -> int:
-        while self.VIDEO_FEED.isOpened():
-            pass
+        """predicts guesture of number in between 0-9 for the landmark
 
-    def landmarks(self):
-        while self.VIDEO_FEED.isOpened():
-            ret, frame = self.VIDEO_FEED.read()
-            image = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-            image = cv2.flip(image, 1)
-            image.flags.writeable = False
+        Args:
+            window_size (int, optional): time in sec. for which data should be collected. Defaults to 2.
+            digit_width (int, optional): number of digite place. Defaults to 1.
 
-            results = self.HAND_OBJECT.process(image)
-            image.flags.writeable = True
-            image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
+        Returns:
+            int: predicted value
+        """
+        _predictions = []
 
-            cv2.imshow("WIN_TITLE", image)
-            if cv2.waitKey(10) & 0xFF == ord('q'):        
-                self.VIDEO_FEED.release()
+        t_end = time.time() + window_size
+        landmark, hand = self._landmarks()
 
-            landmark = results.multi_hand_landmarks
+        while self.VIDEO_FEED.isOpened() and time.time() < t_end:
+            _predictions.append(
+                base.Number.number(
+                    landmark=landmark,
+                    hand=hand
+                ).predict()
+            )
 
-        return landmark
+        out = Counter(_predictions).most_common(1)[0][0]
+        return out
+
+    def _landmarks(self) -> set:
+        """return landmark point and hand
+
+        Returns:
+            set: contains two objects landmark and int:hand
+        """
+
+        ret, frame = self.VIDEO_FEED.read()
+        image = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+        image = cv2.flip(image, 1)
+        image.flags.writeable = False
+
+        results = self.HAND_OBJECT.process(image)
+        image.flags.writeable = True
+        image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
+        landmark = results.multi_hand_landmarks
+
+        if results.multi_hand_landmarks:
+            hand = MessageToDict(results.multi_handedness)
+            # if hand == 'Left':
+            #     hand = 0
+            # elif hand == 'Right':
+            #     hand = 1
+            # else:
+            #     hand = -1
+
+        if landmark and hand != -1:
+            return (landmark, hand)
