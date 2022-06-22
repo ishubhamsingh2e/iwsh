@@ -60,7 +60,7 @@ class iwsh:
 
         if results.multi_hand_landmarks:
             for i in results.multi_handedness:
-                hand = MessageToDict(results.multi_handedness[0])['classification'][0]['label']
+                hand = MessageToDict(i)['classification'][0]['label']
 
                 if hand == "Right":
                     hand = 1
