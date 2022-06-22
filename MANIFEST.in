@@ -1,0 +1,6 @@
+include *.pkl
+
+recursive-include ./src/iwsh/*
+recursive-include ./model/*
+
+include ./src/iwsh/model/*.pkl
