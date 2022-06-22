@@ -3,8 +3,9 @@ import cv2
 import mediapipe as mp
 
 from collections import Counter
+import scipy.stats as stats
 
-from iwsh import base
+from iwsh.base import Number
 from google.protobuf.json_format import MessageToDict
 
 
@@ -23,21 +24,23 @@ class iwsh:
         Returns:
             int: predicted value
         """
-        _predictions = []
 
-        t_end = time.time() + window_size
-        landmark, hand = self._landmarks()
+        _prediction = []
+        start_time = time.time()
 
-        while self.VIDEO_FEED.isOpened() and time.time() < t_end:
-            _predictions.append(
-                base.Number.number(
-                    landmark=landmark,
-                    hand=hand
-                ).predict()
-            )
+        while self.VIDEO_FEED.isOpened():
+            landmark, hand = self._landmarks()
 
-        out = Counter(_predictions).most_common(1)[0][0]
-        return out
+            current_time = time.time()
+            elapsed_time = current_time - start_time
+
+            if elapsed_time > window_size:
+                _prediction = list(filter(None, _prediction))
+                return stats.mode(_prediction).mode
+            else:
+                _prediction.append(Number.number(landmark, hand).predict())
+
+        return "video feed is not open"
 
     def _landmarks(self) -> set:
         """return landmark point and hand
@@ -46,7 +49,7 @@ class iwsh:
             set: contains two objects landmark and int:hand
         """
 
-        hand_out  = []
+        hand_out = []
 
         ret, frame = self.VIDEO_FEED.read()
         image = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
