@@ -46,6 +46,8 @@ class iwsh:
             set: contains two objects landmark and int:hand
         """
 
+        hand_out  = []
+
         ret, frame = self.VIDEO_FEED.read()
         image = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         image = cv2.flip(image, 1)
@@ -57,13 +59,16 @@ class iwsh:
         landmark = results.multi_hand_landmarks
 
         if results.multi_hand_landmarks:
-            hand = MessageToDict(results.multi_handedness)
-            # if hand == 'Left':
-            #     hand = 0
-            # elif hand == 'Right':
-            #     hand = 1
-            # else:
-            #     hand = -1
+            for i in results.multi_handedness:
+                hand = MessageToDict(results.multi_handedness[0])['classification'][0]['label']
 
-        if landmark and hand != -1:
-            return (landmark, hand)
+                if hand == "Right":
+                    hand = 1
+                elif hand == "Left":
+                    hand = 0
+                else:
+                    raise ValueError()
+
+                hand_out.append(hand)
+
+        return (landmark, hand_out)
