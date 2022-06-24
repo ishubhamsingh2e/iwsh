@@ -1,6 +1,7 @@
 import time
 import cv2
 import mediapipe as mp
+import threading
 
 from collections import Counter
 import scipy.stats as stats
@@ -8,8 +9,27 @@ import scipy.stats as stats
 from iwsh.base import Number
 from google.protobuf.json_format import MessageToDict
 
+LOCK = threading.Lock()
 
-class iwsh:
+
+class Singleton(type):
+    _instances = {}
+
+    def __call__(cls, *args, **kwargs):
+        if cls not in cls._instances:
+            with LOCK:
+                if cls not in cls._instances:
+                    cls._instances[cls] = super(
+                        Singleton, cls).__call__(*args, **kwargs)
+        return cls._instances[cls]
+
+
+class iwsh(metaclass=Singleton):
+    """main entry point for iwsh module, contains all the
+       core methode to calculate and predict values for
+       API's and applications
+    """
+
     def __init__(self, VIDEO_FEED, HAND_OBJECT) -> None:
         self.VIDEO_FEED = VIDEO_FEED
         self.HAND_OBJECT = HAND_OBJECT
