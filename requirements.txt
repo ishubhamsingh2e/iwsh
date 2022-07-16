@@ -15,7 +15,7 @@ gitdb==4.0.9
 GitPython==3.1.27
 ipykernel==6.15.0
 ipython==8.4.0
-iwsh @ file:///C:/Users/shubham/Documents/git/iwsh
+iwsh @ file:///C:\Users\Ayan%20Ambesh\Documents\Github\IMPORTANT\iwsh
 jedi==0.18.1
 joblib==1.1.0
 jupyter-client==7.3.4

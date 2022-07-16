@@ -7,7 +7,7 @@ from sklearn.svm import SVC
 import site
 
 
-class number:
+class Number:
     def __init__(self, landmark: list, hand: list[int]) -> None:
         self.landmark = landmark
         self.hand = hand

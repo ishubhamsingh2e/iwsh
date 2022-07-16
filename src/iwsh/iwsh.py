@@ -6,7 +6,9 @@ import threading
 from collections import Counter
 import scipy.stats as stats
 
-from iwsh.base import Number
+from iwsh.base import number
+from iwsh.base import range
+
 from google.protobuf.json_format import MessageToDict
 import numpy as np
 
@@ -106,6 +108,8 @@ class iwsh(metaclass=Singleton):
         self.max_num_hands = max_num_hands
         self.min_detection_confidence = min_detection_confidence
 
+        self.draw_module = mp.solutions.drawing_utils
+        self.mp_hands = mp.solutions.hands
         self.VIDEO_FEED = video(camera=self.camera)
         self.HAND_OBJECT = hands(
             video_object=self.VIDEO_FEED,
@@ -138,6 +142,36 @@ class iwsh(metaclass=Singleton):
                 _prediction = list(filter(None, _prediction))
                 return stats.mode(_prediction).mode
             else:
-                _prediction.append(Number.number(landmark, hand).predict())
+                _prediction.append(number.Number(landmark, hand).predict())
 
         return "video feed is not open"
+
+    def range(self,window_size: int = 2,point_a:int=4,point_b:int=8) -> int:
+        """
+        converts the distance between two points in landmark points,
+        into a range between 0 to 100
+
+        Args:
+            window_size (int, optional): time in sec for func to run for a specific amount of time. Defaults to 2.
+            point_a (int, optional): landmark point of hand. Defaults to 4.
+            point_b (int, optional): landmark point of hand. Defaults to 8.
+
+        Returns:
+            int: gives a number between 0 to 100 according to the distance between the provided landmark points
+        """
+        start_time = time.time()
+        while self.VIDEO_FEED.FEED.isOpened():
+            current_time = time.time()
+            elapsed_time = current_time - start_time
+            ret, frame = self.VIDEO_FEED.FEED.read()
+            image = cv2.cvtColor(frame,cv2.COLOR_BGR2RGB)
+            image = cv2.flip(image,1)
+            image.flags.writeable = False
+            res = self.mp_hands.Hands().process(image)
+            image.flags.writeable = True
+            image = cv2.cvtColor(image,cv2.COLOR_RGB2BGR)
+            imageHeight, imageWidth , _ = image.shape
+            rangeobj = range.Range(imageHeight,imageWidth,res,self.draw_module)
+            if elapsed_time > window_size:
+                return int(rangeobj.continuous_range(point_A=point_a,point_B=point_b))
+        return "Video feed is not open"
