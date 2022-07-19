@@ -146,10 +146,10 @@ class iwsh(metaclass=Singleton):
 
         return "video feed is not open"
 
-    def range(self,window_size: int = 2,point_a:int=4,point_b:int=8) -> int:
+    def range(self, window_size: int = 2, point_a: int = 4, point_b: int = 8) -> float:
         """
         converts the distance between two points in landmark points,
-        into a range between 0 to 100
+        into a range between 0 to 1
 
         Args:
             window_size (int, optional): time in sec for func to run for a specific amount of time. Defaults to 2.
@@ -164,14 +164,15 @@ class iwsh(metaclass=Singleton):
             current_time = time.time()
             elapsed_time = current_time - start_time
             ret, frame = self.VIDEO_FEED.FEED.read()
-            image = cv2.cvtColor(frame,cv2.COLOR_BGR2RGB)
-            image = cv2.flip(image,1)
+            image = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+            image = cv2.flip(image, 1)
             image.flags.writeable = False
             res = self.mp_hands.Hands().process(image)
             image.flags.writeable = True
-            image = cv2.cvtColor(image,cv2.COLOR_RGB2BGR)
-            imageHeight, imageWidth , _ = image.shape
-            rangeobj = range.Range(imageHeight,imageWidth,res,self.draw_module)
+            image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
+            imageHeight, imageWidth, _ = image.shape
+            rangeobj = range.Range(
+                imageHeight, imageWidth, res, self.draw_module)
             if elapsed_time > window_size:
-                return int(rangeobj.continuous_range(point_A=point_a,point_B=point_b))
+                return int(rangeobj.continuous_range(point_A=point_a, point_B=point_b))/100
         return "Video feed is not open"
